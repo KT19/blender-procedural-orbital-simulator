@@ -1,0 +1,60 @@
+# Procedural Orbital Simulator 🪐
+
+A realistic, purely Python-driven orbital simulation operating directly within Blender. This project demonstrates Object-Oriented generation of an entire animated solar system purely from primitive meshes and procedural materials—no manual keyframing or UV unwrapping required.
+
+![Orbital Scene Preview](orbital_preview.gif)
+
+## Architecture & Data Flow
+
+This project separates the concerns of rendering, object generation, and orchestration into three distinct modules:
+
+1.  **`main.py` (The Orchestrator)**
+    Acts as the entry point. It instantiates the scene configuration, triggers the creation of celestial bodies, defines their scale and orbital parameters, and finally loops through assigning the rotation keyframes and executing the render protocol.
+
+2.  **`scene_manager.py` (The World Engine)**
+    Handles global environment settings dynamically:
+    - Sets the Render Engine to **EEVEE** for fast and beautiful material processing.
+    - Generates a **Procedural Starfield Background** using a Noise Texture pushed through a tight Color Ramp (`0.6` to `0.8`) to simulate distant twinkling points of light.
+    - Adds deep space **Volumetric Scatter Fog** with forward anisotropy (`0.6`) so the Sun's light creates beautiful, subtle god rays intersecting the planets.
+    - Configures camera framing and file output formatting (`.png` sequence).
+
+3.  **`celestial_body.py` (The Physics & Shading Module)**
+    Defines the `CelestialBody` class. When instantiated, it strictly handles:
+    - **Generation**: Spawning primitive UV spheres.
+    - **Procedural Shading**:
+      - _Stars_: Replaces BSDF with pure `ShaderNodeEmission`, setting bloom strength and warmth while injecting an ultra-bright interior `POINT` light.
+      - _Rocky Planets_ (Earth, Mars, Venus): Builds randomized surfaces utilizing a `ShaderNodeTexNoise` factor tied into a displacement Bump node for hyper-realistic deep scaling.
+      - _Gas Giants_ (Jupiter): Applies a `ShaderNodeTexWave` mapped linearly on the Z-axis to mimic gaseous horizontal color bands.
+    - **Orbital Mechanics**: Calculates and inserts linear `keyframe` interpolation based on variables (`distance` relative to a center coordinate object, and `speed` multiplied by total frames).
+
+### Orbital Theory
+
+The simulation utilizes **Pivot-Point Parenting**. Rather than attempting to calculate complex rigid body physics or trigonometric coordinates (`sine/cosine` paths) for every frame along an orbit, the logic spawns a `PLAIN_AXES` Empty at the exact center of the system (the Sun).
+
+The celestial objects (e.g., Earth) are parented to this Empty and manually offset by their given `distance`. When the Empty is commanded to rotate linearly `speed * frames` on the Z-Axis over the animation runtime, it naturally drags the child planet along a perfect circular orbit, minimizing processing overhead drastically while securing mathematically perfect loops.
+
+## How to Run
+
+### Prerequisites
+
+- [Blender](https://www.blender.org/download/) installed locally. This is strictly to process the `.py` scripts and output the rendering frames.
+- [FFmpeg](https://ffmpeg.org/download.html) installed locally. This is used exclusively to take the generated image frames and compile them into an animated `.gif` or `.mp4`.
+
+### 1. Generating the Frames
+
+Execute the master script in headless background mode directly from your terminal. This skips loading the Blender UI and renders the 500-frame sequence rapidly to a local `frames/` folder.
+
+```bash
+# MacOS example (Adjust path to your local blender binary if on Win/Linux)
+/Applications/Blender.app/Contents/MacOS/blender --background --python main.py
+```
+
+### 2. Compiling the Simulation
+
+Once the `frames/` directory is fully packed with `.png` sequence files natively rendered by Blender, tie them securely into a high-quality `.mp4` utilizing H.264 video compression natively at 30 Frame-Per-Second:
+
+```bash
+ffmpeg -y -framerate 30 -i frames/frame_%04d.png -c:v libx264 -pix_fmt yuv420p orbital_scene.mp4
+```
+
+_Open `orbital_scene.mp4` to enjoy your new solar system!_
