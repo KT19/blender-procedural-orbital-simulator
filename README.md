@@ -39,8 +39,8 @@ The celestial objects (e.g., Earth) are parented to this Empty and manually offs
 
 ### Prerequisites
 
-- [Blender](https://www.blender.org/download/) installed locally. This is strictly to process the `.py` scripts and output the rendering frames.
-- [FFmpeg](https://ffmpeg.org/download.html) installed locally. This is used exclusively to take the generated image frames and compile them into an animated `.gif` or `.mp4`.
+- Blender installed locally. This is strictly to process the `.py` scripts and output the rendering frames.
+- FFmpeg installed locally. This is used exclusively to take the generated image frames and compile them into an animated `.gif` or `.mp4`.
 
 ### 1. Generating the Frames
 
